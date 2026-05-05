@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <!-- Primary Meta Tags -->
-<title>SAP Barcode Generator — Generate GS1-128 SSCC Barcodes Online</title>
+<title>SAP Barcode Generator - sapbarcode.be</title>
 <meta name="description" content="Free online barcode generator for SAP. Create GS1-128 barcodes from a list of SSCCs and calculate SSCC check digits. Print or save as PDF.">
 <meta name="keywords" content="SAP barcode generator, GS1-128, SSCC, SSCC check digit, SSCC calculator, NVE, SAP EWM barcode, barcode printer, GS1 barcode online, mod-10 check digit, AI 00, warehouse management">
 <meta name="author" content="Lode Verschelde — LV IT Consulting">
@@ -956,16 +956,30 @@
       letter-spacing: 0.01em;
     }
 
+    /* Switch from CSS Grid to inline-block for print.
+       Chrome's print engine has long-standing bugs with break-inside: avoid
+       on CSS Grid items; inline-block honors it reliably. */
     .barcodes {
-      padding: 0.6cm 0.8cm 0;
-      gap: 0.5cm;
+      display: block !important;
+      grid-template-columns: none !important;
+      padding: 0.6cm 0.4cm 0;
+      gap: 0 !important;
+      font-size: 0; /* eliminate inline-block whitespace */
     }
 
     .barcode-card {
+      display: inline-block !important;
+      vertical-align: top;
+      box-sizing: border-box;
+      font-size: 11pt; /* reset font-size from parent */
       background: white !important;
       border: 1px solid #ccc !important;
       box-shadow: none !important;
       padding: 0.3cm !important;
+      margin: 0 0 0.4cm !important;
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
+      break-inside: avoid-page !important;
     }
 
     .barcode-card.warned {
@@ -973,6 +987,12 @@
       border: 1px solid #ccc !important;
       padding: 0.3cm !important;
     }
+
+    /* Per-row widths controlled via data-per-row attribute set by JS */
+    .barcodes[data-per-row="1"] .barcode-card { width: 100%; }
+    .barcodes[data-per-row="2"] .barcode-card { width: 49.5%; margin-right: 0.5% !important; }
+    .barcodes[data-per-row="3"] .barcode-card { width: 32.8%; margin-right: 0.4% !important; }
+    .barcodes[data-per-row="4"] .barcode-card { width: 24.5%; margin-right: 0.4% !important; }
 
     @page { margin: 1.2cm; }
   }
@@ -1393,6 +1413,7 @@
     var grid = document.createElement('div');
     grid.className = 'barcodes';
     grid.style.gridTemplateColumns = 'repeat(' + r.perRow + ', 1fr)';
+    grid.setAttribute('data-per-row', String(r.perRow));
 
     r.toRender.forEach(function(item) {
       var card = document.createElement('div');
