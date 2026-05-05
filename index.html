@@ -851,6 +851,20 @@
     margin: 0 auto;
   }
 
+  .barcode-label {
+    margin-top: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 500;
+    color: #000;
+    letter-spacing: 0.04em;
+    text-align: center;
+    line-height: 1.2;
+  }
+
+  /* In dark theme the card has white background, so keep label black */
+  [data-theme="dark"] .barcode-label { color: #000; }
+
   /* === FOOTER === */
   .footer {
     text-align: center;
@@ -986,6 +1000,12 @@
       background: white !important;
       border: 1px solid #ccc !important;
       padding: 0.3cm !important;
+    }
+
+    .barcode-label {
+      color: #000 !important;
+      margin-top: 0.2cm !important;
+      font-size: 9pt !important;
     }
 
     /* Per-row widths controlled via data-per-row attribute set by JS */
@@ -1420,20 +1440,25 @@
       card.className = 'barcode-card' + (item.warned ? ' warned' : '');
 
       try {
-        var svg = bwipjs.toSVG({
+        var bwipOpts = {
           bcid: 'gs1-128',
           text: '(00)' + item.sscc,
           scale: r.moduleWidth,
           height: r.barHeight,
-          includetext: r.includeText,
-          alttext: r.includeText ? item.sscc : undefined,
-          textxalign: 'center',
-          textsize: 10,
+          includetext: false,   // We render text in HTML below for reliable spacing
           paddingwidth: 4,
           paddingheight: 2,
           backgroundcolor: 'FFFFFF'
-        });
+        };
+        var svg = bwipjs.toSVG(bwipOpts);
         card.innerHTML = svg;
+
+        if (r.includeText) {
+          var label = document.createElement('div');
+          label.className = 'barcode-label';
+          label.textContent = item.sscc;
+          card.appendChild(label);
+        }
       } catch (e) {
         card.innerHTML = '<div class="alert error" style="text-align:left;margin:0;">Render error: ' +
           String(e && e.message ? e.message : e).replace(/</g, '&lt;') + '</div>';
