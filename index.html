@@ -1,0 +1,1512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- Primary Meta Tags -->
+<title>SAP Barcode Generator — Generate GS1-128 SSCC Barcodes Online</title>
+<meta name="description" content="Free online barcode generator for SAP. Create GS1-128 barcodes from a list of SSCCs and calculate SSCC check digits. Print or save as PDF.">
+<meta name="keywords" content="SAP barcode generator, GS1-128, SSCC, SSCC check digit, SSCC calculator, NVE, SAP EWM barcode, barcode printer, GS1 barcode online, mod-10 check digit, AI 00, warehouse management">
+<meta name="author" content="Lode Verschelde — LV IT Consulting">
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
+<link rel="canonical" href="https://sapbarcode.be/">
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://sapbarcode.be/">
+<meta property="og:title" content="SAP Barcode Generator — Generate GS1-128 SSCC Barcodes Online">
+<meta property="og:description" content="Free online tool to create GS1-128 SSCC barcodes from a list and calculate SSCC check digits.">
+<meta property="og:site_name" content="SAPBarcode.be">
+<meta property="og:locale" content="en_US">
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="SAP Barcode Generator — Generate GS1-128 SSCC Barcodes Online">
+<meta name="twitter:description" content="Free online tool to create GS1-128 SSCC barcodes and calculate SSCC check digits.">
+
+<!-- JSON-LD Structured Data -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "SAP Barcode Generator",
+  "description": "Free online tool to generate GS1-128 SSCC barcodes from a list of SSCC numbers and calculate SSCC check digits using the GS1 mod-10 algorithm.",
+  "url": "https://sapbarcode.be/",
+  "applicationCategory": "Utility",
+  "operatingSystem": "Any",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "EUR"
+  },
+  "author": {
+    "@type": "Organization",
+    "name": "LV IT Consulting",
+    "url": "https://www.lvit.be/"
+  },
+  "about": {
+    "@type": "Thing",
+    "name": "GS1-128 Barcode",
+    "sameAs": "https://www.gs1.org/standards/barcodes/gs1-128"
+  },
+  "keywords": "SAP barcode, GS1-128, SSCC, check digit, NVE, warehouse management, SAP EWM"
+}
+</script>
+
+<!-- FAQ Structured Data for rich snippets -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What is an SSCC?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The SSCC (Serial Shipping Container Code) is an 18-digit GS1 identifier used to identify logistic units (pallets, cases, totes). It is composed of an extension digit, a GS1 company prefix, a serial reference, and a mod-10 check digit. SAP EWM uses SSCCs to identify Handling Units."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is GS1-128?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "GS1-128 (formerly UCC/EAN-128) is a barcode standard based on Code 128 with an FNC1 start character that signals GS1 data structure. It is used to encode GS1 Application Identifiers such as AI (00) for SSCC, AI (01) for GTIN, and AI (10) for batch numbers."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How is the SSCC check digit calculated?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The SSCC check digit uses the GS1 mod-10 algorithm. Number the 17 data digits N1..N17 from left to right. Sum equals 3 * (N1+N3+N5+N7+N9+N11+N13+N15+N17) plus (N2+N4+N6+N8+N10+N12+N14+N16). The check digit is (10 minus (Sum mod 10)) mod 10."
+      }
+    }
+  ]
+}
+</script>
+
+<script>
+  // Apply theme immediately to prevent flash. Default = LIGHT.
+  (function(){
+    var saved = localStorage.getItem('sapbarcode-theme');
+    var theme = saved || 'light';
+    document.documentElement.setAttribute('data-theme', theme);
+  })();
+</script>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/bwip-js@4.10.1/dist/bwip-js-min.js"></script>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+  :root {
+    --radius: 10px;
+    --radius-lg: 16px;
+    --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    --accent: #3b82f6;
+    --accent-glow: rgba(59, 130, 246, 0.15);
+    --accent-hover: #2563eb;
+    --success: #10b981;
+    --success-bg: rgba(16, 185, 129, 0.08);
+    --sap-gold: #f0ab00;
+    --warn: #d97706;
+    --error: #f87171;
+  }
+
+  [data-theme="dark"] {
+    --bg-primary: #1a2030;
+    --bg-card: #242e42;
+    --bg-input: #1e2840;
+    --border: #3d4f6a;
+    --text-primary: #f8fafc;
+    --text-secondary: #d4dce8;
+    --text-muted: #8899b0;
+    --sap-gold-dim: rgba(240, 171, 0, 0.18);
+    --grid-color: rgba(59,130,246,0.04);
+    --glow-color: rgba(59,130,246,0.07);
+    --h1-from: #f8fafc;
+    --h1-to: #d4dce8;
+    --card-hover-border: rgba(59,130,246,0.4);
+    --icon-opt-bg: rgba(240,171,0,0.18);  --icon-opt-fg: #fbbf24;
+    --icon-gen-bg: rgba(59,130,246,0.18); --icon-gen-fg: #60a5fa;
+    --icon-calc-bg: rgba(16,185,129,0.18); --icon-calc-fg: #34d399;
+    --warn-bg: rgba(240,171,0,0.10);
+    --warn-border: rgba(240,171,0,0.35);
+    --error-bg: rgba(248,113,113,0.10);
+    --error-border: rgba(248,113,113,0.35);
+    --info-bg: rgba(59,130,246,0.08);
+    --info-border: rgba(59,130,246,0.30);
+    color-scheme: dark;
+  }
+
+  [data-theme="light"] {
+    --bg-primary: #f4f6fa;
+    --bg-card: #ffffff;
+    --bg-input: #f0f2f7;
+    --border: #d5dae3;
+    --text-primary: #1a202c;
+    --text-secondary: #4a5568;
+    --text-muted: #94a3b8;
+    --sap-gold-dim: rgba(240, 171, 0, 0.10);
+    --grid-color: rgba(59,130,246,0.04);
+    --glow-color: rgba(59,130,246,0.04);
+    --h1-from: #1a202c;
+    --h1-to: #4a5568;
+    --card-hover-border: rgba(59,130,246,0.35);
+    --icon-opt-bg: rgba(240,171,0,0.10);  --icon-opt-fg: #d97706;
+    --icon-gen-bg: rgba(59,130,246,0.08); --icon-gen-fg: #2563eb;
+    --icon-calc-bg: rgba(16,185,129,0.08); --icon-calc-fg: #059669;
+    --warn-bg: rgba(240,171,0,0.08);
+    --warn-border: rgba(240,171,0,0.30);
+    --error-bg: rgba(220,38,38,0.06);
+    --error-border: rgba(220,38,38,0.25);
+    --info-bg: rgba(59,130,246,0.05);
+    --info-border: rgba(59,130,246,0.25);
+    color-scheme: light;
+  }
+
+  html { scroll-behavior: smooth }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100vh;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* === BACKGROUND GRID === */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      linear-gradient(var(--grid-color) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    top: -40%; left: -20%;
+    width: 80vw; height: 80vw;
+    background: radial-gradient(ellipse, var(--glow-color) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  [data-theme="light"] body::before,
+  [data-theme="light"] body::after {
+    display: none;
+  }
+
+  .page-wrapper {
+    position: relative;
+    z-index: 1;
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 4rem;
+  }
+
+  /* === HEADER === */
+  .header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+    padding-top: 1.5rem;
+    position: relative;
+  }
+
+  .header-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--sap-gold-dim);
+    border: 1px solid rgba(240,171,0,0.2);
+    color: var(--sap-gold);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 0.35rem 1rem;
+    border-radius: 100px;
+    margin-bottom: 1.25rem;
+  }
+
+  .header-badge svg {
+    width: 14px; height: 14px;
+    fill: currentColor;
+  }
+
+  .header h1 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: clamp(1.5rem, 4vw, 2.2rem);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.4rem;
+    background: linear-gradient(135deg, var(--h1-from) 0%, var(--h1-to) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .header-domain {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-bottom: 0.6rem;
+  }
+
+  .header-subtitle {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    max-width: 560px;
+    margin: 0 auto;
+  }
+
+  /* Print-only combined title — shown only on print */
+  .print-title { display: none; }
+
+  /* === THEME TOGGLE === */
+  .theme-toggle {
+    position: absolute;
+    top: 1.75rem;
+    right: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    padding: 0.3rem;
+    cursor: pointer;
+    transition: border-color var(--transition);
+  }
+
+  .theme-toggle:hover { border-color: var(--accent) }
+
+  .theme-toggle-track {
+    width: 48px;
+    height: 26px;
+    border-radius: 100px;
+    background: var(--bg-input);
+    position: relative;
+    transition: background var(--transition);
+  }
+
+  .theme-toggle-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--accent);
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    transition: transform var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .theme-toggle-thumb svg {
+    width: 12px;
+    height: 12px;
+    fill: #fff;
+  }
+
+  [data-theme="light"] .theme-toggle-thumb {
+    transform: translateX(22px);
+  }
+
+  .theme-toggle-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding-right: 0.5rem;
+    user-select: none;
+  }
+
+  /* === TABS === */
+  .tabs {
+    display: flex;
+    gap: 0.25rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.35rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .tab-button {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 0.7rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all var(--transition);
+  }
+
+  .tab-button:hover {
+    color: var(--text-primary);
+  }
+
+  .tab-button.active {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* === CARDS === */
+  .cards {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.75rem;
+    transition: border-color var(--transition), box-shadow var(--transition);
+  }
+
+  .card:hover { border-color: var(--card-hover-border); }
+
+  .card:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+  }
+
+  [data-theme="light"] .card {
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  }
+
+  .card-label {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .card-icon {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .card--options .card-icon { background: var(--icon-opt-bg); color: var(--icon-opt-fg); }
+  .card--gen .card-icon     { background: var(--icon-gen-bg); color: var(--icon-gen-fg); }
+  .card--calc .card-icon    { background: var(--icon-calc-bg); color: var(--icon-calc-fg); }
+
+  .card-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
+    font-size: 0.85rem;
+    letter-spacing: 0.02em;
+  }
+
+  .card-subtitle {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* === OPTIONS GRID === */
+  .options-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1.25rem 1.5rem;
+  }
+
+  .option {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .option .label-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+  }
+
+  .option label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .option .value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--text-primary);
+    font-weight: 600;
+  }
+
+  .option input[type="range"] {
+    width: 100%;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+
+  .option select {
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: border-color var(--transition);
+    outline: none;
+  }
+
+  .option select:focus { border-color: var(--accent); }
+
+  .checkbox-option {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    cursor: pointer;
+    user-select: none;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    font-family: 'DM Sans', sans-serif;
+    padding-top: 1.1rem;
+  }
+
+  .checkbox-option input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+
+  /* === INPUT (textarea + single-line) === */
+  .textarea-wrapper {
+    margin-bottom: 1rem;
+  }
+
+  .textarea-wrapper textarea {
+    width: 100%;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    padding: 0.85rem 1rem;
+    border-radius: 8px;
+    outline: none;
+    transition: border-color var(--transition);
+    min-height: 220px;
+    resize: vertical;
+  }
+
+  .textarea-wrapper textarea:focus { border-color: var(--accent); }
+
+  .textarea-wrapper textarea::placeholder {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+  }
+
+  /* For calc tab — single-line input row from saptime.be */
+  .input-row {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .input-group {
+    flex: 1;
+    position: relative;
+  }
+
+  .input-group input {
+    width: 100%;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.95rem;
+    padding: 0.7rem 1rem;
+    border-radius: 8px;
+    outline: none;
+    transition: border-color var(--transition);
+    letter-spacing: 0.02em;
+  }
+
+  .input-group input:focus { border-color: var(--accent); }
+
+  .input-group input::placeholder {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+  }
+
+  /* === BUTTONS === */
+  .action-row {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .btn-convert {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    background: var(--accent);
+    color: #fff;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 8px;
+    padding: 0.7rem 1.25rem;
+    cursor: pointer;
+    transition: background var(--transition), transform 0.1s;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .btn-convert:hover { background: var(--accent-hover); }
+  .btn-convert:active { transform: scale(0.97); }
+  .btn-convert:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  .btn-convert svg {
+    width: 15px; height: 15px;
+    fill: currentColor;
+  }
+
+  .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    background: transparent;
+    color: var(--text-secondary);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 600;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.7rem 1.25rem;
+    cursor: pointer;
+    transition: all var(--transition);
+    white-space: nowrap;
+  }
+
+  .btn-secondary:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .btn-secondary svg {
+    width: 14px; height: 14px;
+    fill: currentColor;
+  }
+
+  /* === RESULTS / RESULT-ROWS (shared with saptime.be) === */
+  .results {
+    display: none;
+    gap: 0.5rem;
+    flex-direction: column;
+  }
+  .results.visible { display: flex; }
+
+  .result-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.6rem 0.75rem 0.6rem 1rem;
+  }
+
+  .result-label {
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    font-family: 'JetBrains Mono', monospace;
+    white-space: nowrap;
+    min-width: 110px;
+  }
+
+  .result-value {
+    flex: 1;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    word-break: break-all;
+  }
+
+  .result-value.bigvalue {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  .btn-copy {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 500;
+    padding: 0.35rem 0.65rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all var(--transition);
+    white-space: nowrap;
+  }
+
+  .btn-copy:hover { border-color: var(--accent); color: var(--accent); }
+
+  .btn-copy.copied {
+    border-color: var(--success);
+    color: var(--success);
+    background: var(--success-bg);
+  }
+
+  .btn-copy svg { width: 12px; height: 12px; fill: currentColor; }
+
+  .error-msg {
+    display: none;
+    font-size: 0.8rem;
+    color: var(--error);
+    font-family: 'JetBrains Mono', monospace;
+    padding: 0.5rem 0;
+  }
+
+  .error-msg.visible { display: block; }
+
+  /* === GENERATOR-SPECIFIC RESULTS === */
+  .gen-results {
+    margin-top: 0.5rem;
+  }
+
+  .print-instructions {
+    background: var(--info-bg);
+    border: 1px solid var(--info-border);
+    border-radius: 8px;
+    padding: 0.85rem 1.1rem;
+    margin-bottom: 1rem;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    line-height: 1.55;
+  }
+
+  .print-instructions kbd {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-bottom-width: 2px;
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem;
+    color: var(--text-primary);
+  }
+
+  .summary-bar {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 1rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .summary-bar .summary-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .summary-bar .summary-item.success { color: var(--success); }
+  .summary-bar .summary-item.warning { color: var(--warn); }
+  .summary-bar .summary-item.error   { color: var(--error); }
+
+  .summary-bar .copy-all {
+    margin-left: auto;
+  }
+
+  .alert {
+    border-radius: 8px;
+    padding: 0.85rem 1.1rem;
+    margin-bottom: 0.75rem;
+    font-size: 0.85rem;
+    line-height: 1.55;
+    color: var(--text-primary);
+  }
+
+  .alert.warning {
+    background: var(--warn-bg);
+    border: 1px solid var(--warn-border);
+  }
+
+  .alert.error {
+    background: var(--error-bg);
+    border: 1px solid var(--error-border);
+  }
+
+  .alert.info {
+    background: var(--info-bg);
+    border: 1px solid var(--info-border);
+  }
+
+  .alert strong { font-weight: 600; }
+
+  .alert ul {
+    margin: 0.4rem 0 0;
+    padding-left: 1.4rem;
+  }
+
+  .alert li {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem;
+    margin: 0.2rem 0;
+  }
+
+  /* === BARCODES GRID === */
+  .barcodes {
+    display: grid;
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+
+  .barcode-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem;
+    text-align: center;
+    page-break-inside: avoid;
+    break-inside: avoid;
+    overflow: hidden;
+    transition: border-color var(--transition);
+  }
+
+  [data-theme="light"] .barcode-card {
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+
+  .barcode-card.warned {
+    border-color: var(--sap-gold);
+    border-width: 2px;
+    padding: calc(1rem - 1px);
+  }
+
+  /* For dark theme: barcode SVGs need a white background to be scannable */
+  [data-theme="dark"] .barcode-card {
+    background: #ffffff;
+  }
+  [data-theme="dark"] .barcode-card.warned {
+    background: #fff8e8;
+  }
+
+  .barcode-card svg {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+  }
+
+  /* === FOOTER === */
+  .footer {
+    text-align: center;
+    margin-top: 3.5rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 0.75rem;
+  }
+
+  .footer a {
+    color: var(--text-secondary);
+    text-decoration: none;
+  }
+
+  .footer a:hover { color: var(--accent); }
+
+  /* === RESPONSIVE === */
+  @media (max-width: 600px) {
+    .page-wrapper { padding: 1.25rem 1rem 3rem; }
+    .card { padding: 1.25rem; }
+    .action-row { flex-direction: column; }
+    .input-row { flex-direction: column; }
+    .summary-bar { gap: 0.75rem; }
+    .summary-bar .copy-all { margin-left: 0; width: 100%; }
+    .summary-bar .copy-all button { width: 100%; }
+    .theme-toggle { top: 1rem; }
+    .header { padding-top: 3.5rem; }
+    .header-badge { margin-bottom: 1rem; }
+  }
+
+  /* === ANIMATIONS === */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .card { animation: fadeUp 0.4s ease-out both; }
+  .card:nth-child(1) { animation-delay: 0.05s; }
+  .card:nth-child(2) { animation-delay: 0.12s; }
+  .card:nth-child(3) { animation-delay: 0.19s; }
+
+  /* === PRINT STYLES === */
+  @media print {
+    html, body {
+      background: white !important;
+      color: black !important;
+    }
+
+    body::before, body::after { display: none !important; }
+
+    .page-wrapper {
+      display: table;
+      width: 100%;
+      max-width: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .print-header-group { display: table-header-group; }
+    .print-content-group { display: table-row-group; }
+
+    .theme-toggle,
+    .header-badge,
+    .header h1,
+    .header-domain,
+    .header-subtitle,
+    .tabs,
+    .card--options,
+    .card--gen,
+    .card--calc,
+    .input-row,
+    .textarea-wrapper,
+    .action-row,
+    .summary-bar,
+    .alerts,
+    .print-instructions,
+    .footer,
+    .tab-panel:not(.active),
+    #calc-tab,
+    noscript {
+      display: none !important;
+    }
+
+    .header {
+      margin: 0 !important;
+      padding: 0 !important;
+      border: none !important;
+      text-align: center;
+    }
+
+    .print-title {
+      display: block !important;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11pt;
+      font-weight: 700;
+      color: black !important;
+      background: white !important;
+      text-align: center;
+      padding: 0.4cm 0.5cm;
+      margin: 0;
+      border-bottom: 1px solid #999;
+      letter-spacing: 0.01em;
+    }
+
+    .barcodes {
+      padding: 0.6cm 0.8cm 0;
+      gap: 0.5cm;
+    }
+
+    .barcode-card {
+      background: white !important;
+      border: 1px solid #ccc !important;
+      box-shadow: none !important;
+      padding: 0.3cm !important;
+    }
+
+    .barcode-card.warned {
+      background: white !important;
+      border: 1px solid #ccc !important;
+      padding: 0.3cm !important;
+    }
+
+    @page { margin: 1.2cm; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page-wrapper">
+
+  <div class="print-header-group">
+    <header class="header">
+      <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" aria-label="Toggle light/dark mode">
+        <div class="theme-toggle-track">
+          <div class="theme-toggle-thumb" id="toggle-thumb">
+            <svg id="toggle-icon-moon" viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 9 9c0-.46-.04-.92-.1-1.36a5.389 5.389 0 0 1-4.4 2.26 5.403 5.403 0 0 1-3.14-9.8c-.44-.06-.9-.1-1.36-.1z"/></svg>
+            <svg id="toggle-icon-sun" viewBox="0 0 24 24" style="display:none"><path d="M6.76 4.84l-1.8-1.79-1.41 1.41 1.79 1.79 1.42-1.41zM4 10.5H1v2h3v-2zm9-9.95h-2V3.5h2V.55zm7.45 3.91l-1.41-1.41-1.79 1.79 1.41 1.41 1.79-1.79zm-3.21 13.7l1.79 1.8 1.41-1.41-1.8-1.79-1.4 1.4zM20 10.5v2h3v-2h-3zm-8-5c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm-1 16.95h2V19.5h-2v2.95zm-7.45-3.91l1.41 1.41 1.79-1.8-1.41-1.41-1.79 1.8z"/></svg>
+          </div>
+        </div>
+        <span class="theme-toggle-label" id="toggle-label">Light</span>
+      </button>
+      <div class="header-badge">
+        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+        SAP Utility
+      </div>
+      <h1>SAP Barcode Generator</h1>
+      <p class="header-domain">sapbarcode.be</p>
+      <p class="header-subtitle">Generate GS1-128 SSCC barcodes from a list and calculate SSCC check digits.</p>
+      <!-- Print-only single-line title, repeats on every printed page -->
+      <div class="print-title" aria-hidden="true">SAP Barcode Generator - sapbarcode.be</div>
+    </header>
+  </div>
+
+  <div class="print-content-group">
+
+    <!-- TABS -->
+    <nav class="tabs" role="tablist">
+      <button class="tab-button active" data-tab="generator" role="tab" aria-selected="true">Barcode Generator</button>
+      <button class="tab-button" data-tab="calculator" role="tab" aria-selected="false">Check Digit Calculator</button>
+    </nav>
+
+    <!-- ============================================================== -->
+    <!-- TAB 1: GENERATOR                                                 -->
+    <!-- ============================================================== -->
+    <section class="tab-panel active" data-tab="generator" id="gen-tab">
+      <div class="cards">
+
+        <!-- OPTIONS CARD -->
+        <div class="card card--options">
+          <div class="card-label">
+            <div class="card-icon">O</div>
+            <div>
+              <div class="card-title">Display Options</div>
+              <div class="card-subtitle">Adjust appearance of generated barcodes</div>
+            </div>
+          </div>
+          <div class="options-grid">
+            <div class="option">
+              <div class="label-row">
+                <label for="module-width">Module width</label>
+                <span class="value" id="module-width-value">2</span>
+              </div>
+              <input type="range" id="module-width" min="1" max="4" step="1" value="2">
+            </div>
+            <div class="option">
+              <div class="label-row">
+                <label for="bar-height">Bar height (mm)</label>
+                <span class="value" id="bar-height-value">20</span>
+              </div>
+              <input type="range" id="bar-height" min="10" max="40" step="1" value="20">
+            </div>
+            <div class="option">
+              <div class="label-row">
+                <label for="per-row">Barcodes per row</label>
+              </div>
+              <select id="per-row">
+                <option value="1">1</option>
+                <option value="2" selected>2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+              </select>
+            </div>
+            <label class="checkbox-option">
+              <input type="checkbox" id="include-text" checked>
+              Print numbers below barcodes
+            </label>
+          </div>
+        </div>
+
+        <!-- GENERATOR CARD -->
+        <div class="card card--gen">
+          <div class="card-label">
+            <div class="card-icon">B</div>
+            <div>
+              <div class="card-title">SSCC Input</div>
+              <div class="card-subtitle">One barcode per line — separators: newline, space, comma, semicolon</div>
+            </div>
+          </div>
+          <div class="textarea-wrapper">
+            <textarea id="bulk-input" placeholder="Paste SSCCs here, one per line.&#10;&#10;Examples accepted:&#10;376104250021234569&#10;100000000000000007&#10;(00)376104250021234569&#10;&#10;Maximum 100 barcodes per batch." spellcheck="false" autocomplete="off"></textarea>
+          </div>
+          <div class="action-row">
+            <button class="btn-convert" id="convert-btn">
+              <svg viewBox="0 0 24 24"><path d="M16.01 11H4v2h12.01v3L20 12l-3.99-4v3z"/></svg>
+              Convert to Barcodes
+            </button>
+            <button class="btn-secondary" id="clear-btn">
+              <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+              Clear
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Results — appear below cards on screen, are the only thing on print -->
+      <div class="gen-results" id="results"></div>
+    </section>
+
+    <!-- ============================================================== -->
+    <!-- TAB 2: CALCULATOR                                                -->
+    <!-- ============================================================== -->
+    <section class="tab-panel" data-tab="calculator" id="calc-tab">
+      <div class="cards">
+
+        <div class="card card--calc">
+          <div class="card-label">
+            <div class="card-icon">C</div>
+            <div>
+              <div class="card-title">SSCC Check Digit Calculator</div>
+              <div class="card-subtitle">Enter 17 digits without check digit — GS1 mod-10 algorithm</div>
+            </div>
+          </div>
+          <div class="input-row">
+            <div class="input-group">
+              <input type="text" id="calc-input" inputmode="numeric" autocomplete="off" spellcheck="false"
+                     placeholder="e.g. 37610425002123456">
+            </div>
+            <button class="btn-convert" id="calc-btn">
+              <svg viewBox="0 0 24 24"><path d="M16.01 11H4v2h12.01v3L20 12l-3.99-4v3z"/></svg>
+              Calculate
+            </button>
+          </div>
+          <div class="error-msg" id="calc-error"></div>
+          <div class="results" id="calc-results">
+            <div class="result-row">
+              <span class="result-label">Check digit</span>
+              <span class="result-value bigvalue" id="check-digit">–</span>
+              <button class="btn-copy" onclick="copyVal('check-digit', this)">
+                <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+                Copy
+              </button>
+            </div>
+            <div class="result-row">
+              <span class="result-label">Full SSCC</span>
+              <span class="result-value" id="full-sscc">–</span>
+              <button class="btn-copy" onclick="copyVal('full-sscc', this)">
+                <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+                Copy
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+      <p>Created by <a href="https://www.lvit.be/" target="_blank" rel="noopener">Lode Verschelde</a></p>
+      <hr style="border:none;border-top:1px solid var(--border);margin:1.25rem auto;max-width:200px">
+      <p style="max-width:600px;margin-left:auto;margin-right:auto;line-height:1.5;font-size:0.65rem;opacity:0.5">This free tool generates GS1-128 SSCC barcodes from a list of SSCC numbers and calculates SSCC check digits using the GS1 mod-10 algorithm. SSCCs are 18-digit identifiers used in SAP EWM and across logistics for shipping units.</p>
+    </footer>
+
+    <noscript>
+      <style>.tabs,.cards,.theme-toggle{display:none}</style>
+      <p style="text-align:center;padding:2rem;color:#94a3b8;">This tool requires JavaScript to function. Please enable JavaScript in your browser.</p>
+    </noscript>
+
+  </div>
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  // ===========================================================================
+  // THEME TOGGLE
+  // ===========================================================================
+  function updateToggleUI() {
+    var theme = document.documentElement.getAttribute('data-theme') || 'light';
+    var moonIcon = document.getElementById('toggle-icon-moon');
+    var sunIcon = document.getElementById('toggle-icon-sun');
+    var label = document.getElementById('toggle-label');
+    if (theme === 'dark') {
+      moonIcon.style.display = '';
+      sunIcon.style.display = 'none';
+      label.textContent = 'Dark';
+    } else {
+      moonIcon.style.display = 'none';
+      sunIcon.style.display = '';
+      label.textContent = 'Light';
+    }
+  }
+
+  window.toggleTheme = function() {
+    var current = document.documentElement.getAttribute('data-theme') || 'light';
+    var next = current === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('sapbarcode-theme', next);
+    updateToggleUI();
+  };
+
+  updateToggleUI();
+
+  // ===========================================================================
+  // SSCC mod-10 (GS1) check digit
+  // ===========================================================================
+  // Standard GS1 algorithm: for the 17 data digits N1..N17 numbered from left,
+  // sum = 3 * (N1+N3+N5+N7+N9+N11+N13+N15+N17) + (N2+N4+N6+N8+N10+N12+N14+N16)
+  // check = (10 - (sum mod 10)) mod 10
+  function calculateSSCCCheckDigit(d17) {
+    if (!/^\d{17}$/.test(d17)) return null;
+    var sum = 0;
+    for (var i = 0; i < 17; i++) {
+      var n = parseInt(d17.charAt(i), 10);
+      sum += (i % 2 === 0) ? n * 3 : n;
+    }
+    return (10 - (sum % 10)) % 10;
+  }
+
+  function validateSSCCCheckDigit(d18) {
+    if (!/^\d{18}$/.test(d18)) return false;
+    return calculateSSCCCheckDigit(d18.substring(0, 17)) === parseInt(d18.charAt(17), 10);
+  }
+
+  // Strip parens, spaces, leading (00) AI prefix
+  function normalizeSSCC(raw) {
+    var s = String(raw).replace(/[()\s]/g, '');
+    if (s.length === 20 && s.indexOf('00') === 0) {
+      s = s.substring(2);
+    }
+    return s;
+  }
+
+  function parseBulkInput(text) {
+    return text.split(/[\s,;]+/).map(function(s) { return s.trim(); }).filter(function(s) { return s.length > 0; });
+  }
+
+  // ===========================================================================
+  // TABS
+  // ===========================================================================
+  function switchTab(name) {
+    document.querySelectorAll('.tab-button').forEach(function(b) {
+      var active = b.getAttribute('data-tab') === name;
+      b.classList.toggle('active', active);
+      b.setAttribute('aria-selected', active ? 'true' : 'false');
+    });
+    document.querySelectorAll('.tab-panel').forEach(function(p) {
+      p.classList.toggle('active', p.getAttribute('data-tab') === name);
+    });
+  }
+
+  document.querySelectorAll('.tab-button').forEach(function(b) {
+    b.addEventListener('click', function() { switchTab(b.getAttribute('data-tab')); });
+  });
+
+  // ===========================================================================
+  // SLIDERS — live value display
+  // ===========================================================================
+  ['module-width', 'bar-height'].forEach(function(id) {
+    var el = document.getElementById(id);
+    var vEl = document.getElementById(id + '-value');
+    el.addEventListener('input', function() { vEl.textContent = el.value; });
+  });
+
+  // ===========================================================================
+  // GENERATOR
+  // ===========================================================================
+  document.getElementById('convert-btn').addEventListener('click', generateBarcodes);
+  document.getElementById('clear-btn').addEventListener('click', function() {
+    document.getElementById('bulk-input').value = '';
+    document.getElementById('results').innerHTML = '';
+  });
+
+  function generateBarcodes() {
+    var raw = document.getElementById('bulk-input').value;
+    var entries = parseBulkInput(raw);
+
+    var moduleWidth = parseInt(document.getElementById('module-width').value, 10);
+    var barHeight = parseInt(document.getElementById('bar-height').value, 10);
+    var includeText = document.getElementById('include-text').checked;
+    var perRow = parseInt(document.getElementById('per-row').value, 10);
+
+    var valid = [], warned = [], rejected = [];
+
+    entries.forEach(function(rawEntry, idx) {
+      var lineNum = idx + 1;
+      var n = normalizeSSCC(rawEntry);
+
+      if (!/^\d+$/.test(n)) {
+        rejected.push({ line: lineNum, value: rawEntry, reason: 'contains non-numeric characters' });
+        return;
+      }
+      if (n.length !== 18) {
+        rejected.push({ line: lineNum, value: rawEntry, reason: n.length + ' digits (expected 18)' });
+        return;
+      }
+
+      if (validateSSCCCheckDigit(n)) {
+        valid.push({ line: lineNum, sscc: n, warned: false });
+      } else {
+        var expected = calculateSSCCCheckDigit(n.substring(0, 17));
+        warned.push({ line: lineNum, sscc: n, expectedCheck: expected, warned: true });
+      }
+    });
+
+    // Cap at 100 — drop overflow
+    var toRender = valid.concat(warned);
+    var droppedCount = 0;
+    if (toRender.length > 100) {
+      droppedCount = toRender.length - 100;
+      toRender = toRender.slice(0, 100);
+    }
+
+    renderResults({
+      toRender: toRender,
+      valid: valid,
+      warned: warned,
+      rejected: rejected,
+      droppedCount: droppedCount,
+      perRow: perRow,
+      moduleWidth: moduleWidth,
+      barHeight: barHeight,
+      includeText: includeText
+    });
+  }
+
+  function renderResults(r) {
+    var c = document.getElementById('results');
+    c.innerHTML = '';
+
+    if (r.toRender.length === 0 && r.rejected.length === 0) {
+      var info = document.createElement('div');
+      info.className = 'alert info';
+      info.textContent = 'No input. Enter at least one SSCC and click "Convert to Barcodes".';
+      c.appendChild(info);
+      return;
+    }
+
+    if (r.toRender.length > 0) {
+      var inst = document.createElement('div');
+      inst.className = 'print-instructions';
+      inst.innerHTML = 'To print or save as PDF: press <kbd>Ctrl+P</kbd> (Windows / Linux) or <kbd>Cmd+P</kbd> (Mac), then choose your printer or "Save as PDF". The header repeats on every page.';
+      c.appendChild(inst);
+    }
+
+    // Summary bar with copy-all on the right
+    var summary = document.createElement('div');
+    summary.className = 'summary-bar';
+    var html = '';
+    if (r.valid.length) html += '<span class="summary-item success">&#10003; ' + r.valid.length + ' valid</span>';
+    if (r.warned.length) html += '<span class="summary-item warning">&#9888; ' + r.warned.length + ' wrong check digit</span>';
+    if (r.rejected.length) html += '<span class="summary-item error">&#10007; ' + r.rejected.length + ' rejected</span>';
+    if (r.toRender.length > 0) {
+      html += '<span class="copy-all"><button class="btn-secondary" id="copy-all-btn">'
+        + '<svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>'
+        + 'Copy all SSCC numbers</button></span>';
+    }
+    summary.innerHTML = html;
+    c.appendChild(summary);
+
+    if (r.toRender.length > 0) {
+      var copyBtn = document.getElementById('copy-all-btn');
+      copyBtn.addEventListener('click', function() { copyAllSSCCs(r.toRender, copyBtn); });
+    }
+
+    var alertsWrap = document.createElement('div');
+    alertsWrap.className = 'alerts';
+
+    if (r.droppedCount > 0) {
+      var dropped = document.createElement('div');
+      dropped.className = 'alert warning';
+      dropped.innerHTML = '<strong>Maximum 100 barcodes per batch.</strong> The first 100 entries were processed. ' +
+        r.droppedCount + ' additional entr' + (r.droppedCount === 1 ? 'y was' : 'ies were') + ' dropped.';
+      alertsWrap.appendChild(dropped);
+    }
+
+    if (r.warned.length > 0) {
+      var w = document.createElement('div');
+      w.className = 'alert warning';
+      var wHtml = '<strong>Wrong check digit:</strong> these SSCCs are still rendered but will not scan as valid GS1 SSCCs.<ul>';
+      r.warned.forEach(function(x) {
+        wHtml += '<li>Line ' + x.line + ': ' + x.sscc + ' &mdash; expected last digit: ' + x.expectedCheck + '</li>';
+      });
+      wHtml += '</ul>';
+      w.innerHTML = wHtml;
+      alertsWrap.appendChild(w);
+    }
+
+    if (r.rejected.length > 0) {
+      var rj = document.createElement('div');
+      rj.className = 'alert error';
+      var rHtml = '<strong>Rejected entries:</strong><ul>';
+      r.rejected.forEach(function(x) {
+        var safe = String(x.value).replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        rHtml += '<li>Line ' + x.line + ': "' + safe + '" &mdash; ' + x.reason + '</li>';
+      });
+      rHtml += '</ul>';
+      rj.innerHTML = rHtml;
+      alertsWrap.appendChild(rj);
+    }
+
+    c.appendChild(alertsWrap);
+
+    if (r.toRender.length === 0) return;
+
+    // Barcode grid
+    var grid = document.createElement('div');
+    grid.className = 'barcodes';
+    grid.style.gridTemplateColumns = 'repeat(' + r.perRow + ', 1fr)';
+
+    r.toRender.forEach(function(item) {
+      var card = document.createElement('div');
+      card.className = 'barcode-card' + (item.warned ? ' warned' : '');
+
+      try {
+        var svg = bwipjs.toSVG({
+          bcid: 'gs1-128',
+          text: '(00)' + item.sscc,
+          scale: r.moduleWidth,
+          height: r.barHeight,
+          includetext: r.includeText,
+          alttext: r.includeText ? item.sscc : undefined,
+          textxalign: 'center',
+          textsize: 10,
+          paddingwidth: 4,
+          paddingheight: 2,
+          backgroundcolor: 'FFFFFF'
+        });
+        card.innerHTML = svg;
+      } catch (e) {
+        card.innerHTML = '<div class="alert error" style="text-align:left;margin:0;">Render error: ' +
+          String(e && e.message ? e.message : e).replace(/</g, '&lt;') + '</div>';
+      }
+
+      grid.appendChild(card);
+    });
+
+    c.appendChild(grid);
+  }
+
+  function copyAllSSCCs(items, btn) {
+    var text = items.map(function(i) { return i.sscc; }).join('\n');
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function() { flashCopyButton(btn); }, function() { fallbackCopy(text, btn); });
+    } else {
+      fallbackCopy(text, btn);
+    }
+  }
+
+  function fallbackCopy(text, btn) {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); flashCopyButton(btn); }
+    catch (e) { /* silent */ }
+    document.body.removeChild(ta);
+  }
+
+  function flashCopyButton(btn) {
+    if (!btn) return;
+    var orig = btn.innerHTML;
+    btn.classList.add('copied');
+    btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg> Copied';
+    setTimeout(function() {
+      btn.classList.remove('copied');
+      btn.innerHTML = orig;
+    }, 1500);
+  }
+
+  // ===========================================================================
+  // CALCULATOR
+  // ===========================================================================
+  var calcInput = document.getElementById('calc-input');
+  var calcResults = document.getElementById('calc-results');
+  var calcError = document.getElementById('calc-error');
+
+  document.getElementById('calc-btn').addEventListener('click', calculateCheckDigit);
+  calcInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') { e.preventDefault(); calculateCheckDigit(); }
+  });
+
+  function calculateCheckDigit() {
+    var raw = calcInput.value;
+    var stripped = raw.replace(/[^\d]/g, '');
+
+    calcError.classList.remove('visible');
+    calcResults.classList.remove('visible');
+
+    if (stripped.length === 0) {
+      calcError.textContent = 'Please enter 17 digits.';
+      calcError.classList.add('visible');
+      return;
+    }
+    if (stripped.length !== 17) {
+      calcError.textContent = 'Expected 17 digits, got ' + stripped.length + '.' +
+        (stripped.length === 18 ? ' Did you include the check digit by mistake?' : '');
+      calcError.classList.add('visible');
+      return;
+    }
+
+    var check = calculateSSCCCheckDigit(stripped);
+    var full = stripped + String(check);
+
+    document.getElementById('check-digit').textContent = check;
+    document.getElementById('full-sscc').textContent = full;
+    calcResults.classList.add('visible');
+  }
+
+  // Shared copy function (used by inline onclick handlers in the calc card)
+  window.copyVal = function(id, btn) {
+    var text = document.getElementById(id).textContent;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function() { flashCopyButton(btn); }, function() { fallbackCopy(text, btn); });
+    } else {
+      fallbackCopy(text, btn);
+    }
+  };
+
+})();
+</script>
+
+</body>
+</html>
