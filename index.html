@@ -728,6 +728,28 @@
 
   .error-msg.visible { display: block; }
 
+  /* === CALC BULK RESULTS LIST === */
+  .calc-results-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-top: 0.5rem;
+  }
+  .calc-results-list .calc-row {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.95rem;
+    color: var(--text-primary);
+    padding: 0.55rem 1rem;
+    border-bottom: 1px solid var(--border);
+    letter-spacing: 0.02em;
+    word-break: break-all;
+  }
+  .calc-results-list .calc-row:last-child { border-bottom: none; }
+
   /* === GENERATOR-SPECIFIC RESULTS === */
   .gen-results {
     margin-top: 0.5rem;
@@ -1151,38 +1173,23 @@
             <div class="card-icon">C</div>
             <div>
               <div class="card-title">SSCC Check Digit Calculator</div>
-              <div class="card-subtitle">Enter 17 digits without check digit — GS1 mod-10 algorithm</div>
+              <div class="card-subtitle">Enter 17 digits per line (without check digit) — GS1 mod-10 algorithm</div>
             </div>
           </div>
-          <div class="input-row">
-            <div class="input-group">
-              <input type="text" id="calc-input" inputmode="numeric" autocomplete="off" spellcheck="false"
-                     placeholder="e.g. 37610425002123456">
-            </div>
+          <div class="textarea-wrapper">
+            <textarea id="calc-input" placeholder="Paste 17-digit SSCCs (without check digit) here, one per line.&#10;&#10;Examples accepted:&#10;37610425002123456&#10;10614141123456789&#10;(00)37610425002123456&#10;&#10;Maximum 1000 entries per batch." spellcheck="false" autocomplete="off"></textarea>
+          </div>
+          <div class="action-row">
             <button class="btn-convert" id="calc-btn">
               <svg viewBox="0 0 24 24"><path d="M16.01 11H4v2h12.01v3L20 12l-3.99-4v3z"/></svg>
               Calculate
             </button>
+            <button class="btn-secondary" id="calc-clear-btn">
+              <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+              Clear
+            </button>
           </div>
-          <div class="error-msg" id="calc-error"></div>
-          <div class="results" id="calc-results">
-            <div class="result-row">
-              <span class="result-label">Check digit</span>
-              <span class="result-value bigvalue" id="check-digit">–</span>
-              <button class="btn-copy" onclick="copyVal('check-digit', this)">
-                <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
-                Copy
-              </button>
-            </div>
-            <div class="result-row">
-              <span class="result-label">Full SSCC</span>
-              <span class="result-value" id="full-sscc">–</span>
-              <button class="btn-copy" onclick="copyVal('full-sscc', this)">
-                <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
-                Copy
-              </button>
-            </div>
-          </div>
+          <div id="calc-results"></div>
         </div>
 
       </div>
@@ -1260,7 +1267,8 @@
   // Strip parens, spaces, leading (00) AI prefix
   function normalizeSSCC(raw) {
     var s = String(raw).replace(/[()\s]/g, '');
-    if (s.length === 20 && s.indexOf('00') === 0) {
+    // Strip leading "00" AI when input matches AI(00) + 18-digit SSCC (full) or + 17-digit SSCC (partial, calc tab)
+    if ((s.length === 20 || s.length === 19) && s.indexOf('00') === 0) {
       s = s.substring(2);
     }
     return s;
@@ -1512,53 +1520,132 @@
   }
 
   // ===========================================================================
-  // CALCULATOR
+  // CALCULATOR (bulk)
   // ===========================================================================
   var calcInput = document.getElementById('calc-input');
-  var calcResults = document.getElementById('calc-results');
-  var calcError = document.getElementById('calc-error');
+  var calcResultsEl = document.getElementById('calc-results');
 
-  document.getElementById('calc-btn').addEventListener('click', calculateCheckDigit);
-  calcInput.addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') { e.preventDefault(); calculateCheckDigit(); }
+  document.getElementById('calc-btn').addEventListener('click', calculateCheckDigits);
+  document.getElementById('calc-clear-btn').addEventListener('click', function() {
+    calcInput.value = '';
+    calcResultsEl.innerHTML = '';
   });
 
-  function calculateCheckDigit() {
+  function calculateCheckDigits() {
     var raw = calcInput.value;
-    var stripped = raw.replace(/[^\d]/g, '');
+    var entries = parseBulkInput(raw);
 
-    calcError.classList.remove('visible');
-    calcResults.classList.remove('visible');
+    var valid = [], rejected = [];
 
-    if (stripped.length === 0) {
-      calcError.textContent = 'Please enter 17 digits.';
-      calcError.classList.add('visible');
-      return;
+    entries.forEach(function(rawEntry, idx) {
+      var lineNum = idx + 1;
+      var n = normalizeSSCC(rawEntry);  // strips parens, spaces, leading (00)
+
+      if (!/^\d+$/.test(n)) {
+        rejected.push({ line: lineNum, value: rawEntry, reason: 'contains non-numeric characters' });
+        return;
+      }
+      if (n.length === 18) {
+        rejected.push({ line: lineNum, value: rawEntry, reason: '18 digits — looks like a full SSCC. Use the Barcode Generator to validate.' });
+        return;
+      }
+      if (n.length !== 17) {
+        rejected.push({ line: lineNum, value: rawEntry, reason: n.length + ' digits (expected 17)' });
+        return;
+      }
+
+      var check = calculateSSCCCheckDigit(n);
+      valid.push({ line: lineNum, input: n, full: n + String(check) });
+    });
+
+    // Cap at 1000
+    var droppedCount = 0;
+    if (valid.length > 1000) {
+      droppedCount = valid.length - 1000;
+      valid = valid.slice(0, 1000);
     }
-    if (stripped.length !== 17) {
-      calcError.textContent = 'Expected 17 digits, got ' + stripped.length + '.' +
-        (stripped.length === 18 ? ' Did you include the check digit by mistake?' : '');
-      calcError.classList.add('visible');
-      return;
-    }
 
-    var check = calculateSSCCCheckDigit(stripped);
-    var full = stripped + String(check);
-
-    document.getElementById('check-digit').textContent = check;
-    document.getElementById('full-sscc').textContent = full;
-    calcResults.classList.add('visible');
+    renderCalcResults(valid, rejected, droppedCount);
   }
 
-  // Shared copy function (used by inline onclick handlers in the calc card)
-  window.copyVal = function(id, btn) {
-    var text = document.getElementById(id).textContent;
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).then(function() { flashCopyButton(btn); }, function() { fallbackCopy(text, btn); });
-    } else {
-      fallbackCopy(text, btn);
+  function renderCalcResults(valid, rejected, droppedCount) {
+    calcResultsEl.innerHTML = '';
+
+    if (valid.length === 0 && rejected.length === 0) {
+      var info = document.createElement('div');
+      info.className = 'alert info';
+      info.style.marginTop = '1rem';
+      info.textContent = 'No input. Enter at least one 17-digit number and click "Calculate".';
+      calcResultsEl.appendChild(info);
+      return;
     }
-  };
+
+    // Summary bar with copy-all on the right
+    var summary = document.createElement('div');
+    summary.className = 'summary-bar';
+    summary.style.marginTop = '1rem';
+    var html = '';
+    if (valid.length) html += '<span class="summary-item success">&#10003; ' + valid.length + ' calculated</span>';
+    if (rejected.length) html += '<span class="summary-item error">&#10007; ' + rejected.length + ' rejected</span>';
+    if (valid.length > 0) {
+      html += '<span class="copy-all"><button class="btn-secondary" id="calc-copy-all-btn">'
+        + '<svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>'
+        + 'Copy all SSCC numbers</button></span>';
+    }
+    summary.innerHTML = html;
+    calcResultsEl.appendChild(summary);
+
+    if (valid.length > 0) {
+      var copyBtn = document.getElementById('calc-copy-all-btn');
+      copyBtn.addEventListener('click', function() {
+        var text = valid.map(function(v) { return v.full; }).join('\n');
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(function() { flashCopyButton(copyBtn); }, function() { fallbackCopy(text, copyBtn); });
+        } else {
+          fallbackCopy(text, copyBtn);
+        }
+      });
+    }
+
+    // Alerts
+    var alertsWrap = document.createElement('div');
+
+    if (droppedCount > 0) {
+      var dropped = document.createElement('div');
+      dropped.className = 'alert warning';
+      dropped.innerHTML = '<strong>Maximum 1000 entries per batch.</strong> The first 1000 valid entries were processed. ' +
+        droppedCount + ' additional entr' + (droppedCount === 1 ? 'y was' : 'ies were') + ' dropped.';
+      alertsWrap.appendChild(dropped);
+    }
+
+    if (rejected.length > 0) {
+      var rj = document.createElement('div');
+      rj.className = 'alert error';
+      var rHtml = '<strong>Rejected entries:</strong><ul>';
+      rejected.forEach(function(x) {
+        var safe = String(x.value).replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        rHtml += '<li>Line ' + x.line + ': "' + safe + '" &mdash; ' + x.reason + '</li>';
+      });
+      rHtml += '</ul>';
+      rj.innerHTML = rHtml;
+      alertsWrap.appendChild(rj);
+    }
+
+    calcResultsEl.appendChild(alertsWrap);
+
+    if (valid.length === 0) return;
+
+    // Results list — one full SSCC per row
+    var list = document.createElement('div');
+    list.className = 'calc-results-list';
+    valid.forEach(function(v) {
+      var row = document.createElement('div');
+      row.className = 'calc-row';
+      row.textContent = v.full;
+      list.appendChild(row);
+    });
+    calcResultsEl.appendChild(list);
+  }
 
 })();
 </script>
